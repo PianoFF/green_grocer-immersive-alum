@@ -25,8 +25,28 @@ def apply_coupons(cart, coupons)
   # "AVOCADO" => {:price => 3.00, :clearance => true, :count => 3},
   # "KALE"    => {:price => 3.00, :clearance => false, :count => 1}
   # }
-  
+  w_coupons = {}
+  # binding.pry
+  # coupons = [{:item=>"AVOCADO", :num=>2, :cost=>5.0}]
+  coupons.each do |coupon_hsh|
+    coupon_item = coupon_hsh[:item]
+    if cart[coupon_item]
+      item_total_num = cart[coupon_item][:count]
+      item_num_after_discount = item_total_num % coupon_hsh[:num]
+      item_num_discounted = item_total_num - item_num_after_discount
+      item_discounted_price = coupon_hsh[:cost]/coupon_hsh[:num].to_f
 
+      w_coupons["#{coupon_item} W/COUPON"] = Hash[
+        [
+          [:price, item_discounted_price],
+          [:clearance, (cart[coupon_item][:clearance])],
+          [:count, item_num_discounted]
+        ]
+      ]
+      cart[coupon_item][:count] = item_num_after_discount
+    end
+  end
+  cart = cart.merge(w_coupons)
 end
 
 def apply_clearance(cart)
