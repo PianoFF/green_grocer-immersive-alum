@@ -62,5 +62,20 @@ end
 
 def checkout(cart, coupons)
   # code here
+  total_price = 0
+  couponed_cart = nil
+  
+  consolidated_cart = consolidate_cart(cart)
+  couponed_cart = apply_coupons(consolidated_cart, coupons)
+  final_cart = apply_clearance(couponed_cart)
+  
+  final_cart.each_value do|item_hsh|
+    total_price += (item_hsh[:price] * item_hsh[:count])
+  end
+    
+  if total_price > 100
+    total_price *= 0.9
+  end
 
+  total_price
 end
