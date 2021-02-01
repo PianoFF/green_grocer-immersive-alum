@@ -25,35 +25,41 @@ def apply_coupons(cart, coupons)
   # "AVOCADO" => {:price => 3.00, :clearance => true, :count => 3},
   # "KALE"    => {:price => 3.00, :clearance => false, :count => 1}
   # }
-  w_coupons = {}
+  
   # binding.pry
   # coupons = [{:item=>"AVOCADO", :num=>2, :cost=>5.0}]
   coupons.each do |coupon_hsh|
     coupon_item = coupon_hsh[:item]
+    applied_coupon_name = "#{coupon_item} W/COUPON"
     if cart[coupon_item]
-      item_total_num = cart[coupon_item][:count]
-      item_num_after_discount = item_total_num % coupon_hsh[:num]
-      item_num_discounted = item_total_num - item_num_after_discount
-      item_discounted_price = coupon_hsh[:cost]/coupon_hsh[:num].to_f
+      if cart[coupon_item][:count] >= coupon_hsh[:num]
+        item_total_num = cart[coupon_item][:count]
+        item_discounted_price = coupon_hsh[:cost]/coupon_hsh[:num].to_f
 
-      w_coupons["#{coupon_item} W/COUPON"] = Hash[
-        [
-          [:price, item_discounted_price],
-          [:clearance, (cart[coupon_item][:clearance])],
-          [:count, item_num_discounted]
-        ]
-      ]
-      cart[coupon_item][:count] = item_num_after_discount
+        if cart[applied_coupon_name]
+          cart[applied_coupon_name][:count] += coupon_hsh[:num]
+        else
+          cart[applied_coupon_name] = Hash[
+            [
+              [:price, item_discounted_price],
+              [:clearance, (cart[coupon_item][:clearance])],
+              [:count, coupon_hsh[:num]]
+            ]
+          ]
+        end
+        cart[coupon_item][:count] -= coupon_hsh[:num]
+        # binding.pry
+      end
     end
   end
-  cart = cart.merge(w_coupons)
+  cart
 end
 
 def apply_clearance(cart)
   # code here
   # binding.pry
   cart.each_value do |v| 
-    if v[:clearance] == true
+    if v[:clearance]
       v[:price] -= (v[:price] * 0.2).round(2)
     end
   end
@@ -63,18 +69,19 @@ end
 def checkout(cart, coupons)
   # code here
   total_price = 0
-  couponed_cart = nil
   
   consolidated_cart = consolidate_cart(cart)
   couponed_cart = apply_coupons(consolidated_cart, coupons)
   final_cart = apply_clearance(couponed_cart)
   
   final_cart.each_value do|item_hsh|
-    total_price += (item_hsh[:price] * item_hsh[:count])
+    if item_hsh[:count] > 0
+      total_price += (item_hsh[:price] * item_hsh[:count])
+    end
   end
-    
+    # binding.pry
   if total_price > 100
-    total_price *= 0.9
+    (total_price *= 0.9).round 
   end
 
   total_price
